@@ -1,0 +1,58 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: dynamic_nft_krnl
+      POSTGRES_USER: dynamic_nft
+      POSTGRES_PASSWORD: dynamic_nft
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+
+  api:
+    build:
+      context: ./apps/api
+    env_file:
+      - ./.env
+    environment:
+      PORT: 8000
+      DATABASE_URL: postgresql://dynamic_nft:dynamic_nft@postgres:5432/dynamic_nft_krnl
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: dynamic-nft-assets
+      S3_PUBLIC_BASE_URL: http://localhost:9000/dynamic-nft-assets
+      WORKFLOW_TEMPLATES_DIR: /workspace/packages/workflows/workflows
+      CORS_ORIGIN: http://localhost:3000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./packages/workflows:/workspace/packages/workflows:ro
+    depends_on:
+      - postgres
+      - minio
+
+  web:
+    build:
+      context: ./apps/web
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  postgres-data:
+  minio-data:

@@ -1,0 +1,11 @@
+{
+  "ENV.TARGET_CONTRACT": "0x000000000000000000000000000000000000dEaD",
+  "ENV.SENDER_ADDRESS": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "ENV.ATTESTOR_IMAGE": "https://example.com/attestor.json",
+  "TRANSACTION_INTENT_ID": "intent-set-trait-metadata-uri-0001",
+  "USER_SIGNATURE": "0xintentplaceholder",
+  "TRANSACTION_INTENT_DEADLINE": 1716400000,
+  "TRANSACTION_INTENT_DELEGATE": "0x0000000000000000000000000000000000000000",
+  "brandId": 101,
+  "traitMetadataUri": "https://metadata.example.com/traits/"
+}

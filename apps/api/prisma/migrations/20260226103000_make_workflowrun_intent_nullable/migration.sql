@@ -1,0 +1,2 @@
+ALTER TABLE "WorkflowRun"
+  ALTER COLUMN "krnlIntentId" DROP NOT NULL;

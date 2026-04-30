@@ -1,0 +1,770 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  privyId   String   @unique
+  wallet    String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  brands          Brand[]           @relation("UserBrands")
+  memberships     BrandMembership[]
+  questStates     UserQuestState[]
+}
+
+model Brand {
+  id                 String    @id @default(uuid()) @db.Uuid
+  ownerUserId        String    @db.Text
+  name               String
+  description        String?
+  logoUrl            String?
+  primaryChainId     Int
+  hasZealyConfig     Boolean   @default(false)
+  publicEnabled      Boolean   @default(true)
+  sponsorshipCredits Decimal   @default(0) @db.Decimal(20, 4)
+  automationWalletAddress String? @db.Text
+  krnlSenderAddress  String?  @db.Text
+  krnlDelegationTxHash String? @db.Text
+  krnlDelegationStatus String? @db.Text
+  krnlDelegationUpdatedAt DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @default(now()) @updatedAt
+
+  owner           User              @relation("UserBrands", fields: [ownerUserId], references: [privyId])
+  zealyConfig     BrandZealyConfig?
+  lootboxConfig   BrandLootboxConfig?
+  lootboxConfigV2 LootboxConfig?
+  nftConfig       BrandNftConfig?
+  memberships     BrandMembership[]
+  quests          Quest[]
+  userQuestStates UserQuestState[]
+  payments        Payment[]
+  webhookLogs     ZealyWebhookLog[]
+  zealyEvents     ZealyEvent[]
+  zealyConnections ZealyConnection[]
+  zealyWebhookEvents ZealyWebhookEvent[]
+  zealyQuests     ZealyQuest[]
+  lootKeyPurchaseAudits LootKeyPurchaseAudit[]
+  questRewardRules BrandQuestRewardRule[]
+  userIdentities  UserIdentity[]
+  tokenOwnerships TokenOwnership[]
+  actionQueueItems ActionQueueItem[]
+  workflowRuns    WorkflowRun[]
+  assetPacks      NftAssetPack[]
+  questRewards    QuestReward[]
+  assetObjects    NftAssetObject[]
+  stateMappings   NftStateMapping[]
+  tokenAllocations BrandTokenAllocation[]
+  tokens          Token[]
+  userLedgers     BrandUserLedger[]
+  zealyRewardAudits ZealyRewardAudit[]
+  userBrandXpLedgers UserBrandXpLedger[]
+  userBrandLootLedgers UserBrandLootLedger[]
+  userLootBalances UserLootBalance[]
+  userXpSpendLedgers BrandUserXpLedger[]
+  userEconomyLedgers UserBrandEconomyLedger[]
+  userUnlockedTraits BrandUserUnlockedTrait[]
+  brandRewardRules BrandRewardRule[]
+  brandUsers      BrandUser[]
+  unlockedTraits  UnlockedTrait[]
+  portalSessions  PortalSession[]
+}
+
+model BrandLootboxConfig {
+  brandId      String   @id @db.Uuid
+  xpPerLootKey Int      @default(100)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+}
+
+model UserLootBalance {
+  id        String   @id @default(uuid()) @db.Uuid
+  brandId   String   @db.Uuid
+  wallet    String   @db.Text
+  lootKeys  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([brandId, wallet])
+  @@index([brandId])
+  @@index([wallet])
+}
+
+model LootboxConfig {
+  brandId            String   @id @db.Uuid
+  enabled            Boolean  @default(true)
+  xpCost             Int      @default(0)
+  xpPerLootKey       Int      @default(100)
+  lootKeysPerOpen    Int      @default(1)
+  maxUnlocksPerOpen  Int      @default(1)
+  lootTable          Json     @default("{\"entries\":[]}")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+}
+
+model UserBrandEconomyLedger {
+  id              String   @id @default(uuid()) @db.Uuid
+  brandId         String   @db.Uuid
+  wallet          String   @db.Text
+  zealyXpTotal    Int      @default(0)
+  xpSpent         Int      @default(0)
+  lootKeysBalance Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([brandId, wallet])
+  @@index([brandId])
+  @@index([wallet])
+}
+
+model BrandUserXpLedger {
+  id        String   @id @default(uuid()) @db.Uuid
+  brandId   String   @db.Uuid
+  wallet    String   @db.Text
+  spentXp   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([brandId, wallet])
+  @@index([brandId])
+  @@index([wallet])
+}
+
+model BrandUserUnlockedTrait {
+  id         String   @id @default(uuid()) @db.Uuid
+  brandId    String   @db.Uuid
+  wallet     String   @db.Text
+  traitName  String   @db.Text
+  traitValue String   @db.Text
+  unlockedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([brandId, wallet, traitName, traitValue])
+  @@index([brandId])
+  @@index([wallet])
+}
+
+model BrandZealyConfig {
+  brandId            String   @id @db.Uuid
+  zealySubdomain     String
+  zealyApiKeyEnc     String
+  zealyWebhookSecret String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+}
+
+model BrandMembership {
+  id        String   @id @default(uuid()) @db.Uuid
+  brandId   String   @db.Uuid
+  userId    String?  @db.Uuid
+  wallet    String
+  tokenId   String
+  role      String   @default("evolving")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+  user  User? @relation(fields: [userId], references: [id])
+
+  @@unique([brandId, wallet, tokenId])
+  @@unique([brandId, wallet, role])
+  @@index([brandId])
+  @@index([userId])
+  @@index([wallet])
+}
+
+model Token {
+  id           String   @id @default(uuid()) @db.Uuid
+  tokenId      String   @unique
+  brandId      String   @db.Uuid
+  ownerAddress String?  @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@index([brandId])
+}
+
+model Quest {
+  id           String   @id @default(uuid()) @db.Uuid
+  brandId      String   @db.Uuid
+  zealyQuestId String
+  title        String
+  description  String?
+  xpReward     Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  brand       Brand            @relation(fields: [brandId], references: [id])
+  questStates UserQuestState[]
+  questRewards QuestReward[]
+
+  @@unique([brandId, zealyQuestId])
+  @@index([brandId])
+}
+
+model UserQuestState {
+  id           String   @id @default(uuid()) @db.Uuid
+  brandId      String   @db.Uuid
+  questId      String   @db.Uuid
+  userId       String?  @db.Uuid
+  wallet       String
+  zealyUserId  String?
+  status       String
+  lastUpdateAt DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+  quest Quest @relation(fields: [questId], references: [id])
+  user  User? @relation(fields: [userId], references: [id])
+
+  @@unique([brandId, questId, wallet])
+  @@index([brandId, questId, wallet])
+}
+
+model Payment {
+  id          String   @id @default(uuid()) @db.Uuid
+  brandId     String   @db.Uuid
+  amount      Decimal  @db.Decimal(20, 4)
+  externalRef String?
+  status      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@index([brandId])
+  @@index([status])
+}
+
+model ZealyWebhookLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  brandId      String?  @db.Uuid
+  rawPayload   Json
+  eventType    String?
+  receivedAt   DateTime @default(now())
+  processed    Boolean  @default(false)
+  errorMessage String?
+
+  brand Brand? @relation(fields: [brandId], references: [id])
+
+  @@index([brandId])
+  @@index([processed])
+}
+
+model ZealyEvent {
+  id            String   @id @default(uuid()) @db.Uuid
+  brandId       String   @db.Uuid
+  eventKey      String
+  zealySubdomain String
+  zealyQuestId  String
+  wallet        String
+  status        String
+  workflowRunId String?
+  txHash        String?
+  errorMessage  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([brandId, eventKey])
+  @@index([brandId])
+}
+
+model ZealyConnection {
+  id          String   @id @default(uuid()) @db.Uuid
+  brandId     String   @db.Uuid
+  communityId String
+  apiKey       String   @map("apiKeyEnc")
+  webhookSecret String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([brandId, communityId])
+  @@index([brandId])
+}
+
+model ZealyWebhookEvent {
+  id           String   @id @default(uuid()) @db.Uuid
+  brandId      String   @db.Uuid
+  communityId  String
+  eventType    String
+  zealyEventId String   @unique
+  payloadJson  Json
+  receivedAt   DateTime @default(now())
+  processedAt  DateTime?
+  status       String
+  error        String?
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@index([brandId])
+  @@index([status])
+}
+
+model BrandUserLedger {
+  id            String   @id @default(uuid()) @db.Uuid
+  brandId       String   @db.Uuid
+  walletAddress String   @db.Text
+  tokenId       String?
+  totalXp       Int      @default(0)
+  lootKeys      Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([brandId, walletAddress])
+  @@index([brandId])
+  @@index([walletAddress])
+}
+
+model BrandUser {
+  id            String   @id @default(uuid()) @db.Uuid
+  brandId       String   @db.Uuid
+  walletAddress String   @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([brandId, walletAddress])
+  @@index([brandId])
+  @@index([walletAddress])
+}
+
+model UnlockedTrait {
+  id           String   @id @default(uuid()) @db.Uuid
+  brandId      String   @db.Uuid
+  wallet       String   @db.Text
+  tokenId      String?
+  traitKey     String
+  traitValue   String
+  sourceRunId  String
+  unlockedAt   DateTime @default(now())
+  isActive     Boolean  @default(false)
+  activeAt     DateTime?
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([brandId, wallet, traitKey, traitValue])
+  @@index([brandId])
+  @@index([wallet])
+  @@index([traitKey])
+}
+
+model ZealyRewardAudit {
+  id             String   @id @default(uuid()) @db.Uuid
+  brandId        String   @db.Uuid
+  walletAddress  String   @db.Text
+  zealyQuestId   String
+  xpDelta        Int
+  lootKeyDelta   Int
+  webhookEventId String
+  createdAt      DateTime @default(now())
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([webhookEventId])
+  @@index([brandId])
+  @@index([walletAddress])
+}
+
+model LootKeyPurchaseAudit {
+  id            String   @id @default(uuid()) @db.Uuid
+  brandId       String   @db.Uuid
+  walletAddress String   @db.Text
+  zealyUserId   String   @db.Text
+  deltaLootKeys Int
+  deltaXp       Int
+  type          String   @db.Text
+  createdAt     DateTime @default(now())
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@index([brandId])
+  @@index([walletAddress])
+  @@index([zealyUserId])
+}
+
+model ZealyQuest {
+  id           String   @id @default(uuid()) @db.Uuid
+  brandId      String   @db.Uuid
+  zealyQuestId String
+  title        String
+  description  String?
+  xp           Int?
+  status       String?
+  rawJson      Json
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([brandId, zealyQuestId])
+  @@index([brandId])
+}
+
+model UserBrandXpLedger {
+  id        String   @id @default(uuid()) @db.Uuid
+  brandId   String   @db.Uuid
+  wallet    String   @db.Text
+  xpBalance Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([brandId, wallet])
+  @@index([brandId])
+  @@index([wallet])
+}
+
+model UserBrandLootLedger {
+  id              String   @id @default(uuid()) @db.Uuid
+  brandId         String   @db.Uuid
+  wallet          String   @db.Text
+  lootKeysBalance Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([brandId, wallet])
+  @@index([brandId])
+  @@index([wallet])
+}
+
+model BrandRewardRule {
+  id            String   @id @default(uuid()) @db.Uuid
+  brandId       String   @db.Uuid
+  questId       String   @db.Text
+  enabled       Boolean  @default(true)
+  lootKeysDelta Int      @default(0)
+  label         String?  @db.Text
+  xpMode        String   @default("ZEALY") @db.Text
+  xpOverride    Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([brandId, questId])
+  @@index([brandId])
+}
+
+model BrandQuestRewardRule {
+  id             String   @id @default(uuid()) @db.Uuid
+  brandId        String   @db.Uuid
+  zealyQuestId   String
+  xpDelta        Int      @default(0)
+  lootKeyDelta   Int      @default(0)
+  assetPackId    String?  @db.Uuid
+  enabled        Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([brandId, zealyQuestId])
+  @@index([brandId])
+}
+
+model UserIdentity {
+  id           String   @id @default(uuid()) @db.Uuid
+  brandId      String   @db.Uuid
+  zealyUserId  String
+  walletAddress String
+  createdAt    DateTime @default(now())
+  lastSeenAt   DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([brandId, zealyUserId])
+  @@index([brandId])
+  @@index([walletAddress])
+}
+
+model TokenOwnership {
+  id           String   @id @default(uuid()) @db.Uuid
+  brandId      String   @db.Uuid
+  walletAddress String
+  tokenId      String
+  mintedAt     DateTime @default(now())
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@unique([brandId, tokenId])
+  @@index([brandId])
+  @@index([walletAddress])
+}
+
+enum ActionQueueStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+enum ActionQueueType {
+  MINT_BASE_NFT
+  APPLY_QUEST_RESULT
+  UPDATE_XP
+  OPEN_LOOTBOX
+}
+
+model ActionQueueItem {
+  id          String           @id @default(uuid()) @db.Uuid
+  brandId     String           @db.Uuid
+  walletAddress String
+  tokenId     String?
+  actionType  ActionQueueType
+  payloadJson Json
+  status      ActionQueueStatus @default(PENDING)
+  attempts    Int              @default(0)
+  lastError   String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+  workflowRuns WorkflowRun[]
+
+  @@index([brandId])
+  @@index([status])
+  @@index([actionType])
+}
+
+enum WorkflowRunScopeType {
+  PLATFORM
+  BRAND
+}
+
+enum WorkflowRunStatus {
+  queued
+  running
+  succeeded
+  failed
+}
+
+enum WorkflowRunType {
+  SET_METADATA_URI
+  MINT_BASE_NFT
+  OPEN_LOOTBOX
+  SET_ACTIVE_TRAITS
+  QUEST_REWARD
+}
+
+enum PortalType {
+  BRAND
+  OWNER
+}
+
+model PortalSession {
+  id            String     @id @default(uuid()) @db.Uuid
+  privyUserId   String
+  walletAddress String     @db.Text
+  portalType    PortalType
+  brandId       String?    @db.Uuid
+  isExplicit    Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @default(now()) @updatedAt
+
+  brand Brand? @relation(fields: [brandId], references: [id])
+
+  @@unique([privyUserId])
+  @@index([privyUserId])
+  @@index([walletAddress])
+  @@index([brandId])
+}
+
+model WorkflowRun {
+  id             String   @id @default(uuid()) @db.Uuid
+  brandId        String   @db.Uuid
+  type           WorkflowRunType
+  workflowName   String?
+  status         WorkflowRunStatus @default(queued)
+  wallet         String
+  questId        String?
+  zealyQuestId   String?
+  tokenId        String?
+  actionQueueItemId String? @db.Uuid
+  scopeType      WorkflowRunScopeType @default(BRAND)
+  scopeId        String? @db.Uuid
+  expectedBaseUri String?
+  krnlRunRef     String?
+  txIntentId     String?
+  requestId      String? @map("krnlRequestId")
+  intentId       String? @map("krnlIntentId")
+  krnlExecutionHash String?
+  chainTxHash    String?
+  stepsJson      Json?   @map("lastStatusPayloadJson")
+  krnlStatusJson Json?
+  txHash         String?
+  error          String? @map("errorMessage")
+  retryCount     Int      @default(0)
+  lastRetriedAt  DateTime?
+  renderedWorkflowJson Json?
+  completedAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+  actionQueueItem ActionQueueItem? @relation(fields: [actionQueueItemId], references: [id])
+
+  @@index([brandId])
+  @@index([type])
+  @@index([status])
+  @@index([txIntentId])
+  @@index([requestId])
+  @@index([intentId])
+}
+
+model KrnlExecutorBootstrap {
+  id           String   @id @default(uuid()) @db.Uuid
+  chainId      Int
+  senderAddress String
+  status       String
+  txHash       String?
+  errorMessage String?
+  lastAttemptAt DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  @@unique([chainId, senderAddress])
+  @@index([senderAddress])
+}
+
+model BrandNftConfig {
+  brandId         String   @id @db.Uuid
+  contractAddress String
+  chainId         Int
+  rpcUrl          String
+  activeAssetPackId String? @db.Uuid
+  metadataBaseURI String?
+  baseUriOnchain  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+  activeAssetPack NftAssetPack? @relation("ActiveAssetPack", fields: [activeAssetPackId], references: [id])
+}
+
+model BrandTokenAllocation {
+  id           String   @id @default(uuid()) @db.Uuid
+  brandId      String   @db.Uuid
+  startTokenId Int
+  endTokenId   Int
+  nextTokenId  Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  @@index([brandId])
+  @@index([startTokenId])
+  @@index([endTokenId])
+}
+
+model NftAssetPack {
+  id              String   @id @default(uuid()) @db.Uuid
+  brandId         String   @db.Uuid
+  name            String
+  description     String?
+  baseImageKey    String?
+  previewImageKey String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+
+  brand        Brand         @relation(fields: [brandId], references: [id])
+  assetObjects NftAssetObject[]
+  stateMappings NftStateMapping[]
+  activeInConfigs BrandNftConfig[] @relation("ActiveAssetPack")
+  questRewards QuestReward[]
+
+  @@index([brandId])
+}
+
+model NftAssetObject {
+  id          String   @id @default(uuid()) @db.Uuid
+  brandId     String   @db.Uuid
+  assetPackId String   @db.Uuid
+  objectKey   String
+  fileName    String
+  mimeType    String
+  sizeBytes   Int
+  kind        String
+  stateKey    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  brand     Brand       @relation(fields: [brandId], references: [id])
+  assetPack NftAssetPack @relation(fields: [assetPackId], references: [id])
+  stateMappings NftStateMapping[]
+
+  @@index([brandId])
+  @@index([assetPackId])
+}
+
+model NftStateMapping {
+  id            String   @id @default(uuid()) @db.Uuid
+  brandId       String   @db.Uuid
+  assetPackId   String   @db.Uuid
+  traitName     String
+  traitValue    String
+  imageObjectId String   @db.Uuid
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  brand      Brand         @relation(fields: [brandId], references: [id])
+  assetPack  NftAssetPack  @relation(fields: [assetPackId], references: [id])
+  imageObject NftAssetObject @relation(fields: [imageObjectId], references: [id])
+
+  @@unique([assetPackId, traitName, traitValue])
+  @@index([brandId])
+  @@index([assetPackId])
+}
+
+model QuestReward {
+  id            String   @id @default(uuid()) @db.Uuid
+  brandId       String   @db.Uuid
+  questId       String   @db.Uuid
+  assetPackId   String?  @db.Uuid
+  xpDelta       Int?
+  lootKeysDelta Int?
+  traitUpdates  Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  brand     Brand        @relation(fields: [brandId], references: [id])
+  quest     Quest        @relation(fields: [questId], references: [id])
+  assetPack NftAssetPack? @relation(fields: [assetPackId], references: [id])
+
+  @@unique([questId])
+  @@index([brandId])
+}

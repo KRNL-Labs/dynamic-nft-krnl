@@ -1,0 +1,21 @@
+# Node and dependencies
+node_modules/
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+
+# Environment and local config
+.env
+.env.local
+
+# OS / editor
+.DS_Store
+*.log
+tmp/
+.vscode/
+local-certs/
+
+# Prisma
+prisma/.env
+.prisma/

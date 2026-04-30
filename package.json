@@ -1,0 +1,24 @@
+{
+  "name": "dynamic-nft-krnl",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @dynamic-nft/api --filter @dynamic-nft/web dev",
+    "dev:api": "pnpm --filter @dynamic-nft/api dev",
+    "dev:web": "pnpm --filter @dynamic-nft/web dev",
+    "build": "pnpm build:api && pnpm build:web && pnpm build:contracts",
+    "build:api": "pnpm --filter @dynamic-nft/api build",
+    "build:web": "pnpm --filter @dynamic-nft/web build",
+    "build:contracts": "pnpm --filter @dynamic-nft/contracts compile",
+    "lint": "pnpm --filter @dynamic-nft/web lint",
+    "test": "pnpm --filter @dynamic-nft/api test && pnpm --filter @dynamic-nft/contracts test",
+    "db:migrate": "pnpm --filter @dynamic-nft/api db:migrate",
+    "db:generate": "pnpm --filter @dynamic-nft/api db:generate",
+    "contracts:compile": "pnpm --filter @dynamic-nft/contracts compile",
+    "contracts:test": "pnpm --filter @dynamic-nft/contracts test",
+    "workflows:validate": "node scripts/validate-workflows.js",
+    "verify:standalone": "bash scripts/verify-standalone.sh"
+  }
+}

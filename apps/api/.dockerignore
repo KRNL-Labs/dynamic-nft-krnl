@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+*.log
+.env
+prisma/.env
+.prisma
+npm-debug.log*
+tmp
+.vscode

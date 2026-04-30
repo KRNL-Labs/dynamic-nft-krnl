@@ -1,0 +1,40 @@
+{
+  "name": "@dynamic-nft/api",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "prisma generate && tsc",
+    "start": "node dist/index.js",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate",
+    "test": "ts-node --transpile-only scripts/krnlRpcEnvelope.test.ts && ts-node --transpile-only scripts/krnlSubmitResponseParsing.test.ts && ts-node --transpile-only scripts/krnlIntentIdResolver.test.ts && ts-node --transpile-only scripts/krnlRequestStatusHttpPolling.test.ts && ts-node --transpile-only scripts/renderSetBaseUriTemplate.test.ts && ts-node --transpile-only scripts/krnlIntentSignature.test.ts && ts-node --transpile-only scripts/systemConfig.test.ts && ts-node --transpile-only scripts/traitsSchema.test.ts && ts-node --transpile-only scripts/rewardRulePolicy.test.ts && ts-node --transpile-only scripts/lootboxEconomyService.test.ts && ts-node --transpile-only scripts/lootboxSamplingService.test.ts",
+    "e2e:smoke": "ts-node --transpile-only scripts/e2eSmokeTest.ts",
+    "krnl:test:set-base-uri": "ts-node --transpile-only scripts/krnlIntegrationTestSetBaseUri.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.750.0",
+    "@prisma/client": "^5.16.2",
+    "@privy-io/server-auth": "^1.6.0",
+    "cors": "^2.8.5",
+    "ethers": "^6.13.4",
+    "express": "^4.18.2",
+    "jose": "^5.9.6",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.33.5",
+    "viem": "^2.22.2",
+    "x402": "file:x402-1.1.0.tgz"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.12",
+    "nock": "^13.5.4",
+    "node-fetch": "^2.7.0",
+    "prisma": "^5.16.2",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.4.0"
+  }
+}

@@ -1,0 +1,2 @@
+ALTER TABLE "PortalSession"
+  ADD COLUMN IF NOT EXISTS "isExplicit" BOOLEAN NOT NULL DEFAULT false;

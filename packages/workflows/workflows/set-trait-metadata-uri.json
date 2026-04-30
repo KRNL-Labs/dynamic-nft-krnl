@@ -1,0 +1,99 @@
+{
+  "chain_id": 11155111,
+  "sender": "{{ENV.SENDER_ADDRESS}}",
+  "delegate": "{{TRANSACTION_INTENT_DELEGATE}}",
+  "attestor": "{{ENV.ATTESTOR_IMAGE}}",
+  "target": {
+    "contract": "{{ENV.TARGET_CONTRACT}}",
+    "function": "setTraitMetadataURIAuth((uint256,uint256,bytes32,(bytes32,bytes,bytes)[],bytes,bool,bytes))",
+    "authData_result": "${construct-evm.result}",
+    "parameters": []
+  },
+  "sponsor_execution_fee": true,
+  "value": "0",
+  "intent": {
+    "id": "{{TRANSACTION_INTENT_ID}}",
+    "signature": "{{USER_SIGNATURE}}",
+    "deadline": "{{TRANSACTION_INTENT_DEADLINE}}"
+  },
+  "rpc_url": "${_SECRETS.rpcSepoliaURL}",
+  "bundler_url": "https://api.pimlico.io/v2/sepolia/rpc?apikey=${_SECRETS.pimlico-apikey}",
+  "paymaster_url": "https://api.pimlico.io/v2/sepolia/rpc?apikey=${_SECRETS.pimlico-apikey}",
+  "gas_limit": "100000",
+  "max_fee_per_gas": "20000000000",
+  "max_priority_fee_per_gas": "2000000000",
+  "workflow": {
+    "name": "set-trait-metadata-uri",
+    "version": "v1.0.0",
+    "steps": [
+      {
+        "name": "construct-evm",
+        "image": "ghcr.io/krnl-labs/executor-encoder-evm@sha256:b28823d12eb1b16cbcc34c751302cd2dbe7e35480a5bc20e4e7ad50a059b6611",
+        "attestor": "{{ENV.ATTESTOR_IMAGE}}",
+        "next": "prepare-authdata",
+        "config": {
+          "parameters": [
+            {
+              "name": "traitMetadataPayload",
+              "type": "tuple",
+              "components": [
+                {
+                  "name": "brandId",
+                  "type": "uint256"
+                },
+                {
+                  "name": "traitMetadataUri",
+                  "type": "string"
+                }
+              ]
+            }
+          ]
+        },
+        "inputs": {
+          "value": {
+            "traitMetadataPayload": {
+              "brandId": "{{brandId}}",
+              "traitMetadataUri": "{{traitMetadataUri}}"
+            }
+          }
+        },
+        "outputs": [
+          {
+            "name": "result",
+            "value": "result",
+            "required": true,
+            "export": true
+          }
+        ]
+      },
+      {
+        "name": "prepare-authdata",
+        "image": "ghcr.io/krnl-labs/executor-prepare-authdata@sha256:075e7733db357fe18ddd745372bbea44eaa854c60856c0bdb2a8442c88bc80f9",
+        "attestor": "{{ENV.ATTESTOR_IMAGE}}",
+        "next": "target-calldata",
+        "inputs": {}
+      },
+      {
+        "name": "target-calldata",
+        "image": "ghcr.io/krnl-labs/executor-encoder-evm@sha256:b28823d12eb1b16cbcc34c751302cd2dbe7e35480a5bc20e4e7ad50a059b6611",
+        "attestor": "{{ENV.ATTESTOR_IMAGE}}",
+        "next": "sca-calldata",
+        "inputs": {}
+      },
+      {
+        "name": "sca-calldata",
+        "image": "ghcr.io/krnl-labs/executor-evm-read@sha256:9c15f3e004352f1062a22b8bf7d7fa80498449b9407bc6efc107dbdd7acce5a4",
+        "attestor": "{{ENV.ATTESTOR_IMAGE}}",
+        "next": "bundle",
+        "inputs": {}
+      },
+      {
+        "name": "bundle",
+        "image": "ghcr.io/krnl-labs/executor-data-bundle@sha256:a1d98f6e2e5ea1b4ca326dbdf85033d31f6ee8db930f0593e3bb9c5ff905a982",
+        "attestor": "{{ENV.ATTESTOR_IMAGE}}",
+        "next": null,
+        "inputs": {}
+      }
+    ]
+  }
+}
